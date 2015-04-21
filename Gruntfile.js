@@ -460,7 +460,9 @@ module.exports = function (grunt) {
     'htmlmin'
   ]);
 
-  grunt.registerTask('heroku:development', 'clean less cssmin')
+  grunt.registerTask('heroku:development', 'clean less cssmin');
+
+  grunt.registerTask('heroku:development', 'clean less cssmin uglify');
 
   grunt.registerTask('default', [
     'newer:jshint',
