@@ -22,7 +22,7 @@ module.exports = function(grunt) {
     dist: 'dist',
     statics: 'statics',
     server: 'server',
-    nodemonPort: '8181',
+    nodemonPort: '5455',
   };
 
   // Define the configuration for all the tasks
@@ -175,7 +175,8 @@ module.exports = function(grunt) {
           src: [
             '.tmp',
             '<%= config.dist %>/*',
-            '!<%= config.dist %>/.git*'
+            '!<%= config.dist %>/.git*',
+            '!<%= config.dist %>/.map*'
           ]
         }]
       },
@@ -302,11 +303,6 @@ module.exports = function(grunt) {
     // Renames files for browser caching purposes
     rev: {
       dist: {
-        options: {
-          encoding: 'utf8',
-          algorithm: 'md5',
-          length: 8
-        },
         files: {
           src: [
             '<%= config.dist %>/statics/scripts/**/*.js',
@@ -324,22 +320,31 @@ module.exports = function(grunt) {
     // additional tasks can operate on them
     useminPrepare: {
       options: {
-        dest: '<%= config.dist %>/statics'
+        dest: '<%= config.dist %>/statics',
+        flow: {
+          html: {
+            steps: {
+              js: ['concat', 'uglifyjs'],
+              css: ['cssmin']
+            },
+            post: {}
+          }
+        }
       },
-      html: '<%= config.app %>/**/*.html'
+      html: '<%= config.app %>/**/*.ejs'
     },
 
     // Performs rewrites based on rev and the useminPrepare configuration
     usemin: {
       options: {
         assetsDirs: [
-          '<%= config.dist %>/statics',
+          '<%= config.dist %>',
           '<%= config.dist %>/statics/images',
           '<%= config.dist %>/statics/scripts',
           '<%= config.dist %>/statics/styles'
         ]
       },
-      html: ['<%= config.dist %>/**/*.{ejs,html}'],
+      html: ['<%= config.dist %>/**/*.{html,ejs}'],
       css: ['<%= config.dist %>/**/*.css']
     },
 
@@ -439,7 +444,7 @@ module.exports = function(grunt) {
             'styles/fonts/**/*.*'
           ]
         }, {
-          src: 'node_modules/nginx-server-configs/dist/.htaccess',
+          src: 'node_modules/apache-server-configs/dist/.htaccess',
           dest: '<%= config.dist %>/.htaccess'
         }, {
           expand: true,
@@ -455,15 +460,6 @@ module.exports = function(grunt) {
             return !/statics/.test(filepath)
           },
           dest: '<%= config.dist %>',
-          src: '**/*.js'
-        }, {
-          expand: true,
-          dot: true,
-          cwd: '<%= config.app %>',
-          filter: function(filepath){
-            return !/statics/.test(filepath)
-          },
-          dest: '<%= config.dist %>',
           src: '**/*.{js,ejs}'
         }]
       },
@@ -473,7 +469,13 @@ module.exports = function(grunt) {
           dot: true,
           cwd: '<%= config.app %>',
           dest: '.tmp/',
-          src: '**/*.{js,ejs}'
+          src: '**/*.js'
+        }, {
+          expand: true,
+          dot: true,
+          cwd: '<%= config.app %>/server/views',
+          dest: '.tmp/server/views/',
+          src: '**/*.ejs'
         }]
       },
       styles: {
@@ -514,7 +516,9 @@ module.exports = function(grunt) {
       ],
       dist: [
         'coffee:dist',
-        'less:dist',
+        'less',
+        'copy:styles',
+        'copy:scripts',
         'imagemin',
         'svgmin'
       ]
@@ -522,7 +526,7 @@ module.exports = function(grunt) {
   });
 
 
-  grunt.registerTask('dev', 'start the server and preview your app, --allow-remote for remote access', function(target) {
+  grunt.registerTask('serve', 'start the server and preview your app, --allow-remote for remote access', function(target) {
     if (grunt.option('allow-remote')) {
       grunt.config.set('connect.options.hostname', '0.0.0.0');
     }
@@ -554,8 +558,8 @@ module.exports = function(grunt) {
   });
 
   grunt.registerTask('server', function(target) {
-    grunt.log.warn('The `server` task has been deprecated. Use `grunt dev` to start a server.');
-    grunt.task.run([target ? ('dev:' + target) : 'dev']);
+    grunt.log.warn('The `server` task has been deprecated. Use `grunt serve` to start a server.');
+    grunt.task.run([target ? ('serve:' + target) : 'serve']);
   });
 
   grunt.registerTask('test', function(target) {
@@ -576,46 +580,16 @@ module.exports = function(grunt) {
   grunt.registerTask('build', [
     'clean:dist',
     'wiredep',
-    'concurrent:dist',
-    'copy',
     'useminPrepare',
+    'concurrent:dist',
     'autoprefixer',
     'concat',
     'cssmin',
     'uglify',
+    'copy:dist',
     'rev',
-    'usemin',
-    'htmlmin'
-  ]);
-
-  grunt.registerTask('heroku:development', [
-    'clean:dist',
-    'wiredep',
-    'concurrent:dist',
-    'copy',
-    'useminPrepare',
-    'autoprefixer',
-    'concat',
-    'cssmin',
-    'uglify',
-    'rev',
-    'usemin',
-    'htmlmin'
-  ]);
-
-  grunt.registerTask('heroku:production', [
-    'clean:dist',
-    'wiredep',
-    'concurrent:dist',
-    'copy',
-    'useminPrepare',
-    'autoprefixer',
-    'concat',
-    'cssmin',
-    'uglify',
-    'rev',
-    'usemin',
-    'htmlmin'
+    'usemin'/*,
+    'htmlmin'*/
   ]);
 
   grunt.registerTask('default', [

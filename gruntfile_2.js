@@ -18,11 +18,13 @@ module.exports = function(grunt) {
 
   // Configurable paths
   var config = {
-    app: require('./bower.json').appPath || 'app',
+    app: 'app',
     dist: 'dist',
     statics: 'statics',
     server: 'server',
-    nodemonPort: '8181',
+    tmp: '.tmp',
+    compiled: '.compiled',
+    nodemonPort: '5455',
   };
 
   // Define the configuration for all the tasks
@@ -43,8 +45,16 @@ module.exports = function(grunt) {
         tasks: ['wiredep']
       },
       coffee: {
+        files: ['<%= config.app %>/statics/**/*.{coffee,litcoffee,coffee.md,js}'],
+        tasks: ['coffee:dist','concat:dist']
+      },
+      coffeeServer: {
         files: ['<%= config.app %>/**/*.{coffee,litcoffee,coffee.md,js}'],
-        tasks: ['coffee:dev']
+        filter: function(filepath) {
+          grunt.log.writeln(filepath);
+          return !/statics/.test(filepath);
+        },
+        tasks: ['coffee:server']
       },
       coffeeTest: {
         files: ['test/spec/**/*.{coffee,litcoffee,coffee.md}'],
@@ -55,11 +65,11 @@ module.exports = function(grunt) {
       },
       less: {
         files: ['<%= config.app %>/statics/styles/**/*.{less,css}'],
-        tasks: ['less:dev', 'autoprefixer']
+        tasks: ['less:server','concat:dist', 'autoprefixer']
       },
       scripts: {
         files: ['<%= config.app %>/**/*.{js,ejs}'],
-        tasks: ['newer:copy:scripts']
+        tasks: ['newer:copy:scripts','concat:dist']
       },
       styles: {
         files: ['<%= config.app %>/statics/styles/**/*.css'],
@@ -80,15 +90,15 @@ module.exports = function(grunt) {
 
     nodemon: {
       dev: {
-        script: '.tmp/<%= pkg.main %>',
+        script: './<%= config.tmp %>/<%= pkg.main %>',
         options: {
           env: {
             PORT: '<%= config.nodemonPort %>'
           },
           cwd: __dirname,
           nodeArgs: ['--debug'],
-          watch: ['.tmp'],
           ignore: ['.tmp/statics/**'],
+          watch: ['.tmp'],
           delay: 300,
           callback: function(nodemon) {
 
@@ -174,12 +184,13 @@ module.exports = function(grunt) {
           dot: true,
           src: [
             '.tmp',
+            '.compiled',
             '<%= config.dist %>/*',
             '!<%= config.dist %>/.git*'
           ]
         }]
       },
-      dev: ['.tmp']
+      server: ['.tmp', '.compiled']
     },
 
     // Make sure code styles are up to par and there are no obvious mistakes
@@ -211,16 +222,19 @@ module.exports = function(grunt) {
       dist: {
         files: [{
           expand: true,
-          cwd: '<%= config.app %>',
+          cwd: '<%= config.app %>/statics',
           src: '**/*.{coffee,litcoffee,coffee.md}',
-          dest: '.tmp',
+          dest: '.compiled/statics',
           ext: '.js'
         }]
       },
-      dev: {
+      server: {
         files: [{
           expand: true,
           cwd: '<%= config.app %>',
+          filter: function(filepath) {
+            return !/statics/.test(filepath);
+          },
           src: '**/*.{coffee,litcoffee,coffee.md}',
           dest: '.tmp',
           ext: '.js'
@@ -255,7 +269,7 @@ module.exports = function(grunt) {
           ext: '.css'
         }]
       },
-      dev: {
+      server: {
         options: {
           sourceMap: true,
           sourceMapBasepath: '<%= config.app %>/',
@@ -290,7 +304,7 @@ module.exports = function(grunt) {
     wiredep: {
       app: {
         ignorePath: /^\/|\.\.\//,
-        src: ['<%= config.app %>/**/.{html,ejs}'],
+        src: ['<%= config.app %>/statics/index.html'],
         exclude: ['bower_components/bootstrap/dist/js/bootstrap.js']
       },
       less: {
@@ -302,11 +316,6 @@ module.exports = function(grunt) {
     // Renames files for browser caching purposes
     rev: {
       dist: {
-        options: {
-          encoding: 'utf8',
-          algorithm: 'md5',
-          length: 8
-        },
         files: {
           src: [
             '<%= config.dist %>/statics/scripts/**/*.js',
@@ -326,21 +335,20 @@ module.exports = function(grunt) {
       options: {
         dest: '<%= config.dist %>/statics'
       },
-      html: '<%= config.app %>/**/*.html'
+      html: '<%= config.app %>/statics/index.html'
     },
 
     // Performs rewrites based on rev and the useminPrepare configuration
     usemin: {
       options: {
         assetsDirs: [
-          '<%= config.dist %>/statics',
+          '<%= config.dist %>',
           '<%= config.dist %>/statics/images',
-          '<%= config.dist %>/statics/scripts',
           '<%= config.dist %>/statics/styles'
         ]
       },
-      html: ['<%= config.dist %>/**/*.{ejs,html}'],
-      css: ['<%= config.dist %>/**/*.css']
+      html: ['<%= config.dist %>/statics/**/*.html'],
+      css: ['<%= config.dist %>/statics/styles/**/*.css']
     },
 
     // The following *-min tasks produce minified files in the dist folder
@@ -381,9 +389,9 @@ module.exports = function(grunt) {
         },
         files: [{
           expand: true,
-          cwd: '<%= config.dist %>',
-          src: '**/*.{html,ejs}',
-          dest: '<%= config.dist %>'
+          cwd: '<%= config.dist %>/statics',
+          src: '**/*.html',
+          dest: '<%= config.dist %>/statics'
         }]
       }
     },
@@ -391,7 +399,7 @@ module.exports = function(grunt) {
     // By default, your `index.html`'s <!-- Usemin block --> will take care
     // of minification. These next options are pre-configured if you do not
     // wish to use the Usemin blocks.
-    /*cssmin: {
+    cssmin: {
       minify: {
         expand: true,
         cwd: '.tmp/statics/styles',
@@ -419,10 +427,10 @@ module.exports = function(grunt) {
           }
         },
         files: {
-          "<%= config.tmp %>/<%= config.statics %>/scripts/run.js": ["<%= config.compiled %>/<%= config.statics %>/scripts/*.js"]
+          "<%= config.tmp %>/<%= config.statics %>/scripts/main.js": ["<%= config.compiled %>/<%= config.statics %>/scripts/*.js"]
         }
       }
-    },*/
+    },
 
     // Copies remaining files to places other tasks can use
     copy: {
@@ -439,7 +447,7 @@ module.exports = function(grunt) {
             'styles/fonts/**/*.*'
           ]
         }, {
-          src: 'node_modules/nginx-server-configs/dist/.htaccess',
+          src: 'node_modules/apache-server-configs/dist/.htaccess',
           dest: '<%= config.dist %>/.htaccess'
         }, {
           expand: true,
@@ -447,33 +455,27 @@ module.exports = function(grunt) {
           cwd: 'bower_components/bootstrap/dist',
           src: 'fonts/*',
           dest: '<%= config.dist %>/statics'
-        }, {
-          expand: true,
-          dot: true,
-          cwd: '.tmp',
-          filter: function(filepath){
-            return !/statics/.test(filepath)
-          },
-          dest: '<%= config.dist %>',
-          src: '**/*.js'
-        }, {
-          expand: true,
-          dot: true,
-          cwd: '<%= config.app %>',
-          filter: function(filepath){
-            return !/statics/.test(filepath)
-          },
-          dest: '<%= config.dist %>',
-          src: '**/*.{js,ejs}'
         }]
       },
       scripts: {
         files: [{
           expand: true,
           dot: true,
-          cwd: '<%= config.app %>',
-          dest: '.tmp/',
-          src: '**/*.{js,ejs}'
+          cwd: '<%= config.app %>/server',
+          dest: '.tmp/server/',
+          src: '**/*.js'
+        }, {
+          expand: true,
+          dot: true,
+          cwd: '<%= config.app %>/statics/scripts',
+          dest: '.compiled/statics/scripts/',
+          src: '**/*.js'
+        }, {
+          expand: true,
+          dot: true,
+          cwd: '<%= config.app %>/server/views',
+          dest: '.tmp/server/views/',
+          src: '**/*.ejs'
         }]
       },
       styles: {
@@ -504,17 +506,21 @@ module.exports = function(grunt) {
       options: {
         logConcurrentOutput: true
       },
-      dev: [
-        'less:dev',
+      server: [
+        'less:server',
+        'coffee:dist',
         'copy:styles',
+        'autoprefixer',
+        'concat'
       ],
       test: [
         'coffee',
         'copy:styles'
       ],
       dist: [
-        'coffee:dist',
+        'coffee',
         'less:dist',
+        'copy:styles',
         'imagemin',
         'svgmin'
       ]
@@ -522,7 +528,7 @@ module.exports = function(grunt) {
   });
 
 
-  grunt.registerTask('dev', 'start the server and preview your app, --allow-remote for remote access', function(target) {
+  grunt.registerTask('serve', 'start the server and preview your app, --allow-remote for remote access', function(target) {
     if (grunt.option('allow-remote')) {
       grunt.config.set('connect.options.hostname', '0.0.0.0');
     }
@@ -541,11 +547,11 @@ module.exports = function(grunt) {
     nodemon.stderr.pipe(process.stderr);
 
     grunt.task.run([
-      'clean:dev',
+      'clean:server',
       'wiredep',
-      'coffee:dev',
+      'coffee:server',
       'copy:scripts',
-      'concurrent:dev',
+      'concurrent:server',
       'connect:livereload',
       'configureProxies:server',
       'watch'
@@ -554,14 +560,14 @@ module.exports = function(grunt) {
   });
 
   grunt.registerTask('server', function(target) {
-    grunt.log.warn('The `server` task has been deprecated. Use `grunt dev` to start a server.');
-    grunt.task.run([target ? ('dev:' + target) : 'dev']);
+    grunt.log.warn('The `server` task has been deprecated. Use `grunt serve` to start a server.');
+    grunt.task.run([target ? ('serve:' + target) : 'serve']);
   });
 
   grunt.registerTask('test', function(target) {
     if (target !== 'watch') {
       grunt.task.run([
-        'clean:dev',
+        'clean:server',
         'concurrent:test',
         'autoprefixer'
       ]);
@@ -576,13 +582,15 @@ module.exports = function(grunt) {
   grunt.registerTask('build', [
     'clean:dist',
     'wiredep',
-    'concurrent:dist',
-    'copy',
     'useminPrepare',
+    'coffee:server',
+    'copy:scripts',
+    'concurrent:dist',
     'autoprefixer',
     'concat',
     'cssmin',
     'uglify',
+    'copy:dist',
     'rev',
     'usemin',
     'htmlmin'
@@ -591,13 +599,13 @@ module.exports = function(grunt) {
   grunt.registerTask('heroku:development', [
     'clean:dist',
     'wiredep',
-    'concurrent:dist',
-    'copy',
     'useminPrepare',
+    'concurrent:dist',
     'autoprefixer',
     'concat',
     'cssmin',
     'uglify',
+    'copy:dist',
     'rev',
     'usemin',
     'htmlmin'
@@ -606,13 +614,13 @@ module.exports = function(grunt) {
   grunt.registerTask('heroku:production', [
     'clean:dist',
     'wiredep',
-    'concurrent:dist',
-    'copy',
     'useminPrepare',
+    'concurrent:dist',
     'autoprefixer',
     'concat',
     'cssmin',
     'uglify',
+    'copy:dist',
     'rev',
     'usemin',
     'htmlmin'
