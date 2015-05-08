@@ -1,1 +1,0 @@
-console.log("'Allo 'Allo!"),console.log("'Allo 'Allo!"),function(){console.log("index.coffee")}.call(this);
