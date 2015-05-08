@@ -615,15 +615,15 @@ module.exports = function(grunt) {
   ]);
 
   grunt.registerTask('heroku:production', [
-    'build'/*,
+    'build',
     'clean:heroku',
-    'copy:heroku'*/
+    'copy:heroku'
   ]);
 
   grunt.registerTask('heroku:production', [
-    'build'/*,
+    'build',
     'clean:heroku',
-    'copy:heroku'*/
+    'copy:heroku'
   ]);
 
   grunt.registerTask('default', [
