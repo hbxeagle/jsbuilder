@@ -615,41 +615,13 @@ module.exports = function(grunt) {
   ]);
 
   grunt.registerTask('heroku:production', [
-    'clean:dist',
-    'wiredep',
-    'concurrent:dist',
-    'copy:dist',
-    'copy:scripts',
-    'copy:styles',
-    'useminPrepare',
-    'autoprefixer',
-    'concat',
-    'cssmin',
-    'uglify',
-    'rev',
-    'usemin',
-    'htmlmin',
+    'build',
     'clean:heroku',
     'copy:heroku'
   ]);
 
   grunt.registerTask('heroku:production', [
-    'clean:dist',
-    'wiredep',
-    'concurrent:dist',
-    'copy:dist',
-    'copy:scripts',
-    'copy:styles',
-    'useminPrepare',
-    'autoprefixer',
-    'concat',
-    'cssmin',
-    'uglify',
-    'rev',
-    'usemin',
-    'htmlmin',
-    'clean:heroku',
-    'copy:heroku'
+    'build'
   ]);
 
   grunt.registerTask('default', [
