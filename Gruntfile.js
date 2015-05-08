@@ -179,16 +179,7 @@ module.exports = function(grunt) {
           ]
         }]
       },
-      dev: ['.tmp'],
-      heroku: {
-        files: [{
-          dot: true,
-          src: [
-            '.src',
-            '<%= config.app %>/*'
-          ]
-        }]
-      }
+      dev: ['.tmp']
     },
 
     // Make sure code styles are up to par and there are no obvious mistakes
@@ -491,21 +482,6 @@ module.exports = function(grunt) {
         cwd: '<%= config.app %>/statics/styles',
         dest: '.tmp/statics/styles/',
         src: '**/*.css'
-      },
-      heroku: {
-        files:[{
-          expand: true,
-          dot: true,
-          cwd: '<%= config.app %>',
-          dest: '.src',
-          src: '**/*'
-        },{
-          expand: true,
-          dot: true,
-          cwd: '<%= config.dist %>',
-          dest: '<%= config.app %>',
-          src: '**/*'
-        }]
       }
     },
 
@@ -601,9 +577,7 @@ module.exports = function(grunt) {
     'clean:dist',
     'wiredep',
     'concurrent:dist',
-    'copy:dist',
-    'copy:scripts',
-    'copy:styles',
+    'copy',
     'useminPrepare',
     'autoprefixer',
     'concat',
@@ -615,15 +589,11 @@ module.exports = function(grunt) {
   ]);
 
   grunt.registerTask('heroku:production', [
-    'build',
-    'clean:heroku',
-    'copy:heroku'
+    'build'
   ]);
 
   grunt.registerTask('heroku:production', [
-    'build',
-    'clean:heroku',
-    'copy:heroku'
+    'build'
   ]);
 
   grunt.registerTask('default', [
