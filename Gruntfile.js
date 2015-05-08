@@ -179,7 +179,16 @@ module.exports = function(grunt) {
           ]
         }]
       },
-      dev: ['.tmp']
+      dev: ['.tmp'],
+      heroku: {
+        files: [{
+          dot: true,
+          src: [
+            '.src',
+            '<%= config.app %>/*'
+          ]
+        }]
+      }
     },
 
     // Make sure code styles are up to par and there are no obvious mistakes
@@ -482,6 +491,21 @@ module.exports = function(grunt) {
         cwd: '<%= config.app %>/statics/styles',
         dest: '.tmp/statics/styles/',
         src: '**/*.css'
+      },
+      heroku: {
+        files:[{
+          expand: true,
+          dot: true,
+          cwd: '<%= config.app %>',
+          dest: '.src',
+          src: '**/*'
+        },{
+          expand: true,
+          dot: true,
+          cwd: '<%= config.dist %>',
+          dest: '<%= config.app %>',
+          src: '**/*'
+        }]
       }
     },
 
@@ -577,22 +601,9 @@ module.exports = function(grunt) {
     'clean:dist',
     'wiredep',
     'concurrent:dist',
-    'copy',
-    'useminPrepare',
-    'autoprefixer',
-    'concat',
-    'cssmin',
-    'uglify',
-    'rev',
-    'usemin',
-    'htmlmin'
-  ]);
-
-  grunt.registerTask('heroku:development', [
-    'clean:dist',
-    'wiredep',
-    'concurrent:dist',
-    'copy',
+    'copy:dist',
+    'copy:scripts',
+    'copy:styles',
     'useminPrepare',
     'autoprefixer',
     'concat',
@@ -604,18 +615,15 @@ module.exports = function(grunt) {
   ]);
 
   grunt.registerTask('heroku:production', [
-    'clean:dist',
-    'wiredep',
-    'concurrent:dist',
-    'copy',
-    'useminPrepare',
-    'autoprefixer',
-    'concat',
-    'cssmin',
-    'uglify',
-    'rev',
-    'usemin',
-    'htmlmin'
+    'build',
+    'clean:heroku',
+    'copy:heroku'
+  ]);
+
+  grunt.registerTask('heroku:production', [
+    'build',
+    'clean:heroku',
+    'copy:heroku'
   ]);
 
   grunt.registerTask('default', [
