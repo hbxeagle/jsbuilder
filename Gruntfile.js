@@ -254,7 +254,7 @@ module.exports = function(grunt) {
       dist: {
         options: {
           cleancss: true,
-          report: 'gzip'
+          report: 'min'
         },
         files: [{
           expand: true,
