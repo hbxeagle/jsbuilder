@@ -1,5 +1,5 @@
 express = require('express')
-routes = require('./server/routes')
+routes = require(__dirname + '/server/routes')
 app = express()
 
 app.set('port', (process.env.PORT || 5000))
