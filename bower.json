@@ -2,8 +2,8 @@
   "name": "jsbuilder",
   "private": true,
   "dependencies": {
+    "jquery": "*",
     "json3": "^3.3.0",
-    "es5-shim": "^4.0.0",
-    "bootstrap": "^3.2.0"
+    "es5-shim": "^4.0.0"
   }
 }
