@@ -174,6 +174,7 @@ module.exports = function(grunt) {
           dot: true,
           src: [
             '.tmp',
+            '<%= config.dist %>/*',
             '!<%= config.dist %>/.git*'
           ]
         }]
@@ -585,14 +586,6 @@ module.exports = function(grunt) {
     'rev',
     'usemin',
     'htmlmin'
-  ]);
-
-  grunt.registerTask('heroku:production', [
-    'build'
-  ]);
-
-  grunt.registerTask('heroku:production', [
-    'build'
   ]);
 
   grunt.registerTask('default', [
